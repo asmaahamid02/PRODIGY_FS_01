@@ -8,3 +8,10 @@ export const validatePassword = (password: string) => ({
   number: /[0-9]/.test(password),
   special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(password),
 })
+
+export const isValidPassword = (password: string) =>
+  Object.values(validatePassword(password)).every(Boolean)
+
+export const isValidName = (name: string) => name.length >= 5
+
+export const isValidEmail = (email: string) => validateEmail(email)

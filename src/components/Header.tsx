@@ -8,7 +8,7 @@ const Header = () => {
   const { data: session } = useSession()
 
   return (
-    <header className='shrink-0 bg-emerald-700 text-white px-6 md:px-8 py-4 flex items-center shadow-lg'>
+    <header className='shrink-0 bg-emerald-700 text-white px-6 md:px-8 py-4 flex items-center shadow-lg sticky w-full top-0 h-16'>
       <nav className='flex justify-between gap-4 items-center w-full'>
         <Link
           href={'/'}

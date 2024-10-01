@@ -18,8 +18,8 @@ const Check = () => {
         y2='38.142'
         gradientUnits='userSpaceOnUse'
       >
-        <stop offset='0' stop-color='#21ad64'></stop>
-        <stop offset='1' stop-color='#088242'></stop>
+        <stop offset='0' stopColor='#21ad64'></stop>
+        <stop offset='1' stopColor='#088242'></stop>
       </linearGradient>
       <path
         fill='url(#I9GV0SozQFknxHSR6DCx5a_70yRC8npwT3d_gr1)'

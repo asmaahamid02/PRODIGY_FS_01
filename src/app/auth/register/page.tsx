@@ -11,11 +11,17 @@ const Register = () => {
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
+    role: 'instructor',
   })
+
+  const [message, setMessage] = useState('')
 
   const [errors, setErrors] = useState({
     name: '',
     email: '',
+    confirmPassword: '',
+    general: '',
   })
 
   const [passwordValidations, setPasswordValidations] = useState({
@@ -35,7 +41,9 @@ const Register = () => {
     )
   }, [formData, passwordValidations])
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
 
@@ -65,25 +73,63 @@ const Register = () => {
     if (name === 'password') {
       setPasswordValidations(validatePassword(value))
     }
+
+    if (name === 'confirmPassword') {
+      setErrors((prev) => ({
+        ...prev,
+        confirmPassword:
+          value !== formData.password ? 'Passwords do not match' : '',
+      }))
+    }
   }
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!isFormValid) {
       if (!formData.name)
         setErrors((prev) => ({ ...prev, name: 'Name is required' }))
       if (!formData.email)
         setErrors((prev) => ({ ...prev, email: 'Email is required' }))
+      if (!formData.confirmPassword)
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword: 'Please confirm your password',
+        }))
       return
     }
 
     // Submit logic
     console.log('Registering user:', formData)
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      setMessage(data.message)
+      console.log(data)
+    } catch (error: any) {
+      setErrors((prev) => ({ ...prev, general: error.message }))
+    }
   }
 
   return (
     <div className='w-full max-w-sm mx-auto flex flex-col justify-center items-center bg-white border rounded-lg p-4 space-y-4'>
       <h1 className='text-2xl font-semibold'>Register</h1>
+      {errors.general && (
+        <span className='text-red-500 text-sm text-center'>
+          {errors.general}
+        </span>
+      )}
+      {message && (
+        <span className='text-green-500 text-sm text-center'>{message}</span>
+      )}
       <form onSubmit={handleSubmit} className='w-full flex flex-col space-y-4'>
         {/* Name Field */}
         <InputField
@@ -123,12 +169,39 @@ const Register = () => {
           <PasswordChecklist validations={passwordValidations} />
         </div>
 
+        {/* Password confirmation */}
+        <InputField
+          label='Confirm Password'
+          id='confirmPassword'
+          name='confirmPassword'
+          type='password'
+          placeholder='Confirm Password'
+          value={formData.confirmPassword}
+          error={errors.confirmPassword}
+          onChange={handleChange}
+        />
+
+        {/* Role field */}
+        <div className='space-y-2 flex flex-col'>
+          <label htmlFor='role'>Join as</label>
+          <select
+            name='role'
+            id='role'
+            className='border rounded-lg p-2'
+            value={formData.role}
+            onChange={handleChange}
+          >
+            <option value='instructor'>Instructor</option>
+            <option value='student'>Student</option>
+          </select>
+        </div>
+
         <button
           disabled={!isFormValid}
           type='submit'
           className='bg-emerald-500 text-white p-2 rounded-lg disabled:opacity-70 disabled:cursor-not-allowed'
         >
-          Login
+          Register
         </button>
       </form>
       <p className='text-sm'>
