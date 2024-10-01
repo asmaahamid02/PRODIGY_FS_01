@@ -1,11 +1,17 @@
 'use client'
 import GoogleButton from '@/components/GoogleButton'
+import { handleError } from '@/lib/utils'
+import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import React from 'react'
+import toast from 'react-hot-toast'
 
 const Login = () => {
   const [error, setError] = React.useState<string>('')
+  const [role, setRole] = React.useState<string>('student')
+  const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const email = e.currentTarget.email.value
     const password = e.currentTarget.password.value
@@ -15,13 +21,30 @@ const Login = () => {
       return
     }
 
-    setError('')
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
 
-    console.log('Login with email: ', email, ' and password: ', password)
+      if (result?.error) {
+        throw new Error(result.error as string)
+      }
+
+      console.log(result)
+
+      toast.success('Logged in successfully!')
+
+      router.push('/')
+    } catch (error: unknown) {
+      handleError(error)
+      return
+    }
   }
 
   return (
-    <div className='w-full max-w-sm mx-auto flex flex-col justify-center items-center bg-white border rounded-lg p-4 space-y-4'>
+    <>
       <h1 className='text-2xl font-semibold'>Login</h1>
       <form onSubmit={handleSubmit} className='w-full flex flex-col space-y-4'>
         {error && (
@@ -43,6 +66,24 @@ const Login = () => {
           placeholder='Password'
           className='border rounded-lg p-2'
         />
+
+        {/* Role field */}
+        <div className='space-y-2 flex flex-col'>
+          <label className='text-sm' htmlFor='role'>
+            Join as
+          </label>
+          <select
+            name='role'
+            id='role'
+            className='text-sm border rounded-lg p-2'
+            value={role}
+            onChange={(e) => setRole(e.currentTarget.value)}
+          >
+            <option value='instructor'>Instructor</option>
+            <option value='student'>Student</option>
+          </select>
+        </div>
+
         <button
           type='submit'
           className='bg-emerald-500 text-white p-2 rounded-lg'
@@ -57,8 +98,8 @@ const Login = () => {
         </a>
       </p>
       <p className='text-sm text-emerald-500'>or</p>
-      <GoogleButton />
-    </div>
+      <GoogleButton role={role} />
+    </>
   )
 }
 

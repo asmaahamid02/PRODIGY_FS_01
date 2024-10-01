@@ -1,24 +1,44 @@
 import withAuth, { NextRequestWithAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
 
-const authRoutes = ['/auth/login', '/auth/register']
-// export default withAuth(function middleware(req: NextRequestWithAuth) {
-//   // If the user is not authenticated, redirect to the login page
-//   if (!req.nextauth) {
-//     const url = req.nextUrl.clone()
-//     url.pathname = '/auth/login?callbackUrl=' + req.nextUrl.pathname
-//     return NextResponse.rewrite(url)
-//   }
+export default withAuth(function middleware(req: NextRequestWithAuth) {
+  // If the user is not authenticated, redirect to the login page
+  const url = req.nextUrl.clone()
+  if (!req.nextauth.token) {
+    url.pathname = '/auth/login?callbackUrl=' + req.nextUrl.pathname
+    return NextResponse.rewrite(url)
+  }
+  console.log('role: ', req.nextauth.token.role)
 
-//   // If the user is authenticated, redirect to the home page
-//   if (req.nextauth && authRoutes.includes(req.nextUrl.pathname)) {
-//     return NextResponse.redirect('/')
-//   }
+  //admin page access control
+  if (
+    req.nextUrl.pathname.startsWith('/admin') &&
+    req.nextauth.token.role !== 'admin'
+  ) {
+    url.pathname = '/unauthorized'
+    return NextResponse.rewrite(url)
+  }
 
-//   return NextResponse.next()
-// })
+  //instructor page access control
+  if (
+    req.nextUrl.pathname.startsWith('/instructor') &&
+    req.nextauth.token.role !== 'instructor'
+  ) {
+    url.pathname = '/unauthorized'
+    return NextResponse.rewrite(url)
+  }
 
-export { default } from 'next-auth/middleware'
+  //student page access control
+  if (
+    req.nextUrl.pathname.startsWith('/student') &&
+    req.nextauth.token.role !== 'student'
+  ) {
+    url.pathname = '/unauthorized'
+    return NextResponse.rewrite(url)
+  }
+
+  return NextResponse.next()
+})
 
 export const config = {
   matcher: [
@@ -27,5 +47,6 @@ export const config = {
     '/student/:path*',
     '/courses/:path*',
     '/users/:path*',
+    '/unauthorized',
   ],
 }

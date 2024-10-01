@@ -1,6 +1,6 @@
 'use client'
 
-import { signIn, useSession } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import React from 'react'
 
@@ -39,7 +39,12 @@ const Header = () => {
             Schedule
           </Link>
           {session ? (
-            <button className='font-medium hover:underline'>Logout</button>
+            <button
+              className='font-medium hover:underline'
+              onClick={() => signOut()}
+            >
+              Logout
+            </button>
           ) : (
             <button
               className='font-medium hover:underline'

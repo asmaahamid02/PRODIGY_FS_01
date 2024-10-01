@@ -1,7 +1,7 @@
 import { isValidEmail, isValidName, isValidPassword } from '@/lib/utils'
-import User from '@/models/userModel'
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
+import client from '@/lib/db'
 
 type TRegisterRequest = {
   name: string
@@ -44,11 +44,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (!['admin', 'instructor', 'user'].includes(role)) {
+    if (!['admin', 'instructor', 'student'].includes(role)) {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
 
-    const duplicate = await User.findOne({ email })
+    const duplicate = await client
+      .db('secureme_db')
+      .collection('users')
+      .findOne({ email })
 
     if (duplicate) {
       return NextResponse.json(
@@ -60,17 +63,30 @@ export async function POST(req: NextRequest) {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
-    const user = await User.create({
+    const user = await client.db('secureme_db').collection('users').insertOne({
       name,
       email,
       password: hashedPassword,
       role,
     })
 
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User registration failed' },
+        { status: 500 }
+      )
+    }
+
+    const newUser = await client
+      .db('secureme_db')
+      .collection('users')
+      .findOne({ email })
+
     return NextResponse.json(
-      { message: 'User registered successfully', user },
+      { message: 'User registered successfully', user: newUser },
       { status: 201 }
     )
+    //eslint-disable-next-line
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

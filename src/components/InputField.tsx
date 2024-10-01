@@ -12,9 +12,11 @@ type TProps = {
 }
 
 const InputField = ({ label, error, ...props }: TProps) => (
-  <div className='space-y-2 flex flex-col'>
-    <label htmlFor={props.id}>{label}</label>
-    <input className='border rounded-lg p-2' {...props} />
+  <div className='space-y-2 flex-1 flex flex-col'>
+    <label className='text-sm' htmlFor={props.id}>
+      {label}
+    </label>
+    <input className='text-sm border rounded-lg p-2' {...props} />
     {error && <span className='pl-2 text-xs text-red-500'>{error}</span>}
   </div>
 )

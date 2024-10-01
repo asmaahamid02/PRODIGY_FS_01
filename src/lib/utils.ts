@@ -1,3 +1,5 @@
+import toast from 'react-hot-toast'
+
 export const validateEmail = (email: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
@@ -15,3 +17,15 @@ export const isValidPassword = (password: string) =>
 export const isValidName = (name: string) => name.length >= 5
 
 export const isValidEmail = (email: string) => validateEmail(email)
+
+export const handleError = (error: unknown) => {
+  let message = 'An error occurred'
+  if (error instanceof Error) {
+    message = error.message
+  } else if (typeof error === 'string') {
+    message = error
+  }
+
+  toast.error(message)
+  console.error(error)
+}

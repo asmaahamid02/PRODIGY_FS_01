@@ -3,8 +3,11 @@
 import GoogleButton from '@/components/GoogleButton'
 import InputField from '@/components/InputField'
 import PasswordChecklist from '@/components/PasswordChecklist'
-import { validateEmail, validatePassword } from '@/lib/utils'
-import { ChangeEvent, FormEvent, useMemo, useState } from 'react'
+import { handleError, validateEmail, validatePassword } from '@/lib/utils'
+import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import React, { ChangeEvent, FormEvent, useMemo, useState } from 'react'
+import toast from 'react-hot-toast'
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -14,8 +17,6 @@ const Register = () => {
     confirmPassword: '',
     role: 'instructor',
   })
-
-  const [message, setMessage] = useState('')
 
   const [errors, setErrors] = useState({
     name: '',
@@ -40,6 +41,8 @@ const Register = () => {
       Object.values(passwordValidations).every(Boolean)
     )
   }, [formData, passwordValidations])
+
+  const router = useRouter()
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -98,9 +101,6 @@ const Register = () => {
       return
     }
 
-    // Submit logic
-    console.log('Registering user:', formData)
-
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -112,82 +112,108 @@ const Register = () => {
 
       const data = await response.json()
 
-      setMessage(data.message)
-      console.log(data)
-    } catch (error: any) {
-      setErrors((prev) => ({ ...prev, general: error.message }))
+      if (!response.ok) {
+        throw new Error(data.error)
+      }
+
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      })
+
+      console.log(result)
+
+      if (result?.error) {
+        throw new Error(result.error as string)
+      }
+
+      toast.success('Registered successfully!')
+
+      router.push('/')
+    } catch (error: unknown) {
+      handleError(error)
+      return
     }
   }
 
   return (
-    <div className='w-full max-w-sm mx-auto flex flex-col justify-center items-center bg-white border rounded-lg p-4 space-y-4'>
+    <>
       <h1 className='text-2xl font-semibold'>Register</h1>
       {errors.general && (
         <span className='text-red-500 text-sm text-center'>
           {errors.general}
         </span>
       )}
-      {message && (
-        <span className='text-green-500 text-sm text-center'>{message}</span>
-      )}
       <form onSubmit={handleSubmit} className='w-full flex flex-col space-y-4'>
-        {/* Name Field */}
-        <InputField
-          label='Name'
-          id='name'
-          name='name'
-          placeholder='Name'
-          value={formData.name}
-          error={errors.name}
-          onChange={handleChange}
-        />
-
-        {/* Email Field */}
-        <InputField
-          label='Email'
-          id='email'
-          name='email'
-          type='email'
-          placeholder='Email'
-          value={formData.email}
-          error={errors.email}
-          onChange={handleChange}
-        />
-
-        {/* Password Field */}
-        <div className='space-y-2 flex flex-col'>
-          <label htmlFor='password'>Password</label>
-          <input
-            type='password'
-            id='password'
-            name='password'
-            placeholder='Password'
-            className='border rounded-lg p-2'
-            value={formData.password}
+        <div className='flex gap-2'>
+          {/* Name Field */}
+          <InputField
+            label='Name'
+            id='name'
+            name='name'
+            placeholder='Name'
+            value={formData.name}
+            error={errors.name}
             onChange={handleChange}
           />
+
+          {/* Email Field */}
+          <InputField
+            label='Email'
+            id='email'
+            name='email'
+            type='email'
+            placeholder='Email'
+            value={formData.email}
+            error={errors.email}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className='space-y-2'>
+          <div className='flex gap-2'>
+            {/* Password Field */}
+            <div className='space-y-2 flex-1 flex flex-col'>
+              <label className='text-sm' htmlFor='password'>
+                Password
+              </label>
+              <input
+                type='password'
+                id='password'
+                name='password'
+                placeholder='Password'
+                className='text-sm border rounded-lg p-2'
+                value={formData.password}
+                onChange={handleChange}
+              />
+            </div>
+
+            {/* Password confirmation */}
+            <InputField
+              label='Confirm Password'
+              id='confirmPassword'
+              name='confirmPassword'
+              type='password'
+              placeholder='Confirm Password'
+              value={formData.confirmPassword}
+              error={errors.confirmPassword}
+              onChange={handleChange}
+            />
+          </div>
+
           <PasswordChecklist validations={passwordValidations} />
         </div>
 
-        {/* Password confirmation */}
-        <InputField
-          label='Confirm Password'
-          id='confirmPassword'
-          name='confirmPassword'
-          type='password'
-          placeholder='Confirm Password'
-          value={formData.confirmPassword}
-          error={errors.confirmPassword}
-          onChange={handleChange}
-        />
-
         {/* Role field */}
         <div className='space-y-2 flex flex-col'>
-          <label htmlFor='role'>Join as</label>
+          <label className='text-sm' htmlFor='role'>
+            Join as
+          </label>
           <select
             name='role'
             id='role'
-            className='border rounded-lg p-2'
+            className='text-sm border rounded-lg p-2'
             value={formData.role}
             onChange={handleChange}
           >
@@ -211,8 +237,8 @@ const Register = () => {
         </a>
       </p>
       <p className='text-sm text-emerald-500'>or</p>
-      <GoogleButton />
-    </div>
+      <GoogleButton role={formData.role} />
+    </>
   )
 }
 
