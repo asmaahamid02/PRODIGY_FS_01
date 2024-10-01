@@ -12,16 +12,7 @@ export const nextAuthOptions: NextAuthOptions = {
   ],
   adapter: MongoDBAdapter(client),
   secret: process.env.NEXTAUTH_SECRET,
-  callbacks: {
-    async signIn({ user, account, profile, email, credentials }) {
-      return true
-    },
-    async redirect({ baseUrl }) {
-      return baseUrl
-    },
-    async session({ session, user, account }) {
-      console.log('session', session)
-      return session
-    },
+  pages: {
+    signIn: '/auth/login',
   },
 }
