@@ -2,36 +2,46 @@
 
 import GoogleButton from '@/components/GoogleButton'
 import InputField from '@/components/InputField'
+import Loader from '@/components/Loader'
 import PasswordChecklist from '@/components/PasswordChecklist'
+import PrimaryButton from '@/components/PrimaryButton'
+import RoleField from '@/components/RoleField'
 import { handleError, validateEmail, validatePassword } from '@/lib/utils'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import React, { ChangeEvent, FormEvent, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 
+const initialFormData = {
+  name: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  role: 'instructor',
+}
+
+const initialErrors = {
+  name: '',
+  email: '',
+  confirmPassword: '',
+  general: '',
+}
+
+const initialPasswordValidations = {
+  length: false,
+  uppercase: false,
+  lowercase: false,
+  number: false,
+  special: false,
+}
+
 const Register = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'instructor',
-  })
-
-  const [errors, setErrors] = useState({
-    name: '',
-    email: '',
-    confirmPassword: '',
-    general: '',
-  })
-
-  const [passwordValidations, setPasswordValidations] = useState({
-    length: false,
-    uppercase: false,
-    lowercase: false,
-    number: false,
-    special: false,
-  })
+  const [formData, setFormData] = useState(initialFormData)
+  const [errors, setErrors] = useState(initialErrors)
+  const [passwordValidations, setPasswordValidations] = useState(
+    initialPasswordValidations
+  )
+  const [loading, setLoading] = useState(false)
 
   const isFormValid = useMemo(() => {
     return (
@@ -88,6 +98,9 @@ const Register = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    setLoading(true)
+
     if (!isFormValid) {
       if (!formData.name)
         setErrors((prev) => ({ ...prev, name: 'Name is required' }))
@@ -98,6 +111,8 @@ const Register = () => {
           ...prev,
           confirmPassword: 'Please confirm your password',
         }))
+
+      setLoading(false)
       return
     }
 
@@ -122,18 +137,18 @@ const Register = () => {
         redirect: false,
       })
 
-      console.log(result)
-
       if (result?.error) {
         throw new Error(result.error as string)
       }
 
       toast.success('Registered successfully!')
 
-      router.push('/')
+      router.push('/courses')
     } catch (error: unknown) {
       handleError(error)
       return
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -206,29 +221,11 @@ const Register = () => {
         </div>
 
         {/* Role field */}
-        <div className='space-y-2 flex flex-col'>
-          <label className='text-sm' htmlFor='role'>
-            Join as
-          </label>
-          <select
-            name='role'
-            id='role'
-            className='text-sm border rounded-lg p-2'
-            value={formData.role}
-            onChange={handleChange}
-          >
-            <option value='instructor'>Instructor</option>
-            <option value='student'>Student</option>
-          </select>
-        </div>
+        <RoleField role={formData.role} handleChange={handleChange} />
 
-        <button
-          disabled={!isFormValid}
-          type='submit'
-          className='bg-emerald-500 text-white p-2 rounded-lg disabled:opacity-70 disabled:cursor-not-allowed'
-        >
-          Register
-        </button>
+        <PrimaryButton type='submit' disabled={loading}>
+          {loading ? <Loader /> : 'Register'}
+        </PrimaryButton>
       </form>
       <p className='text-sm'>
         Already have an account?
@@ -237,7 +234,7 @@ const Register = () => {
         </a>
       </p>
       <p className='text-sm text-emerald-500'>or</p>
-      <GoogleButton role={formData.role} />
+      <GoogleButton />
     </>
   )
 }

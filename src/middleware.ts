@@ -4,35 +4,33 @@ import { NextResponse } from 'next/server'
 export default withAuth(function middleware(req: NextRequestWithAuth) {
   // If the user is not authenticated, redirect to the login page
   const url = req.nextUrl.clone()
+  const { pathname } = req.nextUrl
+
   if (!req.nextauth.token) {
-    url.pathname = '/auth/login?callbackUrl=' + req.nextUrl.pathname
+    url.pathname = '/auth/login?callbackUrl=' + pathname
     return NextResponse.rewrite(url)
   }
-  console.log('role: ', req.nextauth.token.role)
+  const { role } = req.nextauth.token.user
+
+  if (!role && pathname !== '/update-role') {
+    url.pathname = '/update-role'
+    return NextResponse.rewrite(url)
+  }
 
   //admin page access control
-  if (
-    req.nextUrl.pathname.startsWith('/admin') &&
-    req.nextauth.token.role !== 'admin'
-  ) {
+  if (pathname.startsWith('/admin') && role !== 'admin') {
     url.pathname = '/unauthorized'
     return NextResponse.rewrite(url)
   }
 
   //instructor page access control
-  if (
-    req.nextUrl.pathname.startsWith('/instructor') &&
-    req.nextauth.token.role !== 'instructor'
-  ) {
+  if (pathname.startsWith('/instructor') && role !== 'instructor') {
     url.pathname = '/unauthorized'
     return NextResponse.rewrite(url)
   }
 
   //student page access control
-  if (
-    req.nextUrl.pathname.startsWith('/student') &&
-    req.nextauth.token.role !== 'student'
-  ) {
+  if (pathname.startsWith('/student') && role !== 'student') {
     url.pathname = '/unauthorized'
     return NextResponse.rewrite(url)
   }
@@ -48,5 +46,6 @@ export const config = {
     '/courses/:path*',
     '/users/:path*',
     '/unauthorized',
+    '/update-role',
   ],
 }

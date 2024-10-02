@@ -41,7 +41,9 @@ const Header = () => {
           {session ? (
             <button
               className='font-medium hover:underline'
-              onClick={() => signOut()}
+              onClick={() =>
+                signOut({ callbackUrl: '/auth/login?callbackUrl=/' })
+              }
             >
               Logout
             </button>

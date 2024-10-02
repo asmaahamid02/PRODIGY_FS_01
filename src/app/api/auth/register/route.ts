@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     const duplicate = await client
-      .db('secureme_db')
+      .db(process.env.DB_NAME)
       .collection('users')
       .findOne({ email })
 
@@ -63,12 +63,15 @@ export async function POST(req: NextRequest) {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
-    const user = await client.db('secureme_db').collection('users').insertOne({
-      name,
-      email,
-      password: hashedPassword,
-      role,
-    })
+    const user = await client
+      .db(process.env.DB_NAME)
+      .collection('users')
+      .insertOne({
+        name,
+        email,
+        password: hashedPassword,
+        role,
+      })
 
     if (!user) {
       return NextResponse.json(
@@ -78,7 +81,7 @@ export async function POST(req: NextRequest) {
     }
 
     const newUser = await client
-      .db('secureme_db')
+      .db(process.env.DB_NAME)
       .collection('users')
       .findOne({ email })
 

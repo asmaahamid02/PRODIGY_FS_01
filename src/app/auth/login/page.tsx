@@ -1,5 +1,7 @@
 'use client'
 import GoogleButton from '@/components/GoogleButton'
+import Loader from '@/components/Loader'
+import PrimaryButton from '@/components/PrimaryButton'
 import { handleError } from '@/lib/utils'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -8,11 +10,14 @@ import toast from 'react-hot-toast'
 
 const Login = () => {
   const [error, setError] = React.useState<string>('')
-  const [role, setRole] = React.useState<string>('student')
+  const [loading, setLoading] = React.useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    setLoading(true)
+
     const email = e.currentTarget.email.value
     const password = e.currentTarget.password.value
 
@@ -32,14 +37,14 @@ const Login = () => {
         throw new Error(result.error as string)
       }
 
-      console.log(result)
-
       toast.success('Logged in successfully!')
 
-      router.push('/')
+      router.push('/courses')
     } catch (error: unknown) {
       handleError(error)
       return
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -67,29 +72,9 @@ const Login = () => {
           className='border rounded-lg p-2'
         />
 
-        {/* Role field */}
-        <div className='space-y-2 flex flex-col'>
-          <label className='text-sm' htmlFor='role'>
-            Join as
-          </label>
-          <select
-            name='role'
-            id='role'
-            className='text-sm border rounded-lg p-2'
-            value={role}
-            onChange={(e) => setRole(e.currentTarget.value)}
-          >
-            <option value='instructor'>Instructor</option>
-            <option value='student'>Student</option>
-          </select>
-        </div>
-
-        <button
-          type='submit'
-          className='bg-emerald-500 text-white p-2 rounded-lg'
-        >
-          Login
-        </button>
+        <PrimaryButton type='submit' disabled={loading}>
+          {loading ? <Loader /> : 'Login'}
+        </PrimaryButton>
       </form>
       <p className='text-sm'>
         Don&apos;t have an account?
@@ -98,7 +83,7 @@ const Login = () => {
         </a>
       </p>
       <p className='text-sm text-emerald-500'>or</p>
-      <GoogleButton role={role} />
+      <GoogleButton />
     </>
   )
 }

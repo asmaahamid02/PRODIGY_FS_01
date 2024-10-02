@@ -1,10 +1,10 @@
 import bcrypt from 'bcryptjs'
-import { MongoDBAdapter } from '@auth/mongodb-adapter'
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import client from '@/lib/db'
 import jwt from 'jsonwebtoken'
+import { MongoDBAdapter } from '@auth/mongodb-adapter'
 
 export const nextAuthOptions: NextAuthOptions = {
   providers: [
@@ -16,17 +16,16 @@ export const nextAuthOptions: NextAuthOptions = {
       name: 'Credentials',
       type: 'credentials',
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: {},
+        password: {},
       },
       async authorize(credentials) {
-        console.log('Credentials: ', credentials)
         if (!credentials) {
           throw new Error('Invalid credentials')
         }
 
         const user = await client
-          .db('secureme_db')
+          .db(process.env.DB_NAME)
           .collection('users')
           .findOne({ email: credentials?.email })
 
@@ -51,24 +50,35 @@ export const nextAuthOptions: NextAuthOptions = {
           }
         )
 
-        return { email: user.email, role: user.role, name: user.name, token }
+        const { _id, email, role, name } = user
+
+        return {
+          id: _id.toString(),
+          email,
+          role,
+          name,
+          token,
+        }
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user, account }) {
-      if (user) token.role = (user as any).role || (account as any).role
-      return token
+      if (user) {
+        token.user = user
+        token.user.token = user.token || account?.access_token || ''
+      }
+      return Promise.resolve(token)
     },
     async session({ session, token }) {
-      if (session.user && token.role) session.user.role = token.role
-      return session
-    },
-    async signIn(params) {
-      console.log('params: ', params)
-      return true
+      if (token) {
+        session.user = token.user
+      }
+
+      return Promise.resolve(session)
     },
   },
+  //@ts-expect-error Type check error
   adapter: MongoDBAdapter(client),
   secret: process.env.NEXTAUTH_SECRET,
   jwt: {
