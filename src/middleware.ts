@@ -6,16 +6,22 @@ export default withAuth(function middleware(req: NextRequestWithAuth) {
   const url = req.nextUrl.clone()
   const { pathname } = req.nextUrl
 
+  // Allow access to /update-role without redirection
+  if (pathname === '/update-role') {
+    return NextResponse.next()
+  }
+
+  // If the user is authenticated but doesn't have a role, redirect to /update-role
+  if (req.nextauth.token && !req.nextauth.token?.user?.role) {
+    url.pathname = '/update-role'
+    return NextResponse.rewrite(url)
+  }
+
   if (!req.nextauth.token) {
     url.pathname = '/auth/login?callbackUrl=' + pathname
     return NextResponse.rewrite(url)
   }
-  const { role } = req.nextauth.token.user
-
-  if (!role && pathname !== '/update-role') {
-    url.pathname = '/update-role'
-    return NextResponse.rewrite(url)
-  }
+  const role = req.nextauth.token?.user?.role
 
   //admin page access control
   if (pathname.startsWith('/admin') && role !== 'admin') {
@@ -40,6 +46,7 @@ export default withAuth(function middleware(req: NextRequestWithAuth) {
 
 export const config = {
   matcher: [
+    '/',
     '/admin/:path*',
     '/instructor/:path*',
     '/student/:path*',

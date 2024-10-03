@@ -63,18 +63,26 @@ export const nextAuthOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger, session }) {
       if (user) {
         token.user = user
         token.user.token = user.token || account?.access_token || ''
       }
+
+      if (trigger === 'update' && session.role) {
+        token.user.role = session.role
+      }
+
       return Promise.resolve(token)
     },
     async session({ session, token }) {
       if (token) {
         session.user = token.user
       }
-
+      //update session
+      // if (trigger === 'update' && newSession.role) {
+      //   session.user.role = newSession.role
+      // }
       return Promise.resolve(session)
     },
   },
