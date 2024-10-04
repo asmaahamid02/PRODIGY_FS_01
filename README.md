@@ -17,6 +17,10 @@
 
 ## Demo
 
+- [Live Demo](https://secureme-liart.vercel.app)
+
+![demo](./readme/demo.gif)
+
 ## Requirements
 
 - Nodejs v18.x : [Installation guide](https://nodejs.org/en/download/package-manager/current)
@@ -74,3 +78,7 @@
 
 5. **Access the application:**
    Open your browser and navigate to `http://localhost:3000`
+
+6. Admin account
+   - Email: <vaxysu@mailinator.com>
+   - Password: Pa$$w0rd!
