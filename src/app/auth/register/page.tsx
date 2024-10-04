@@ -45,9 +45,7 @@ const Register = () => {
 
   const isFormValid = useMemo(() => {
     return (
-      formData.name &&
-      formData.email &&
-      formData.password &&
+      Object.values(formData).every(Boolean) &&
       Object.values(passwordValidations).every(Boolean)
     )
   }, [formData, passwordValidations])
@@ -87,7 +85,7 @@ const Register = () => {
       setPasswordValidations(validatePassword(value))
     }
 
-    if (name === 'confirmPassword') {
+    if (name === 'confirmPassword' || name === 'password') {
       setErrors((prev) => ({
         ...prev,
         confirmPassword:
@@ -134,7 +132,7 @@ const Register = () => {
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        redirect: false,
+        callbackUrl: '/',
       })
 
       if (result?.error) {
@@ -143,7 +141,7 @@ const Register = () => {
 
       toast.success('Registered successfully!')
 
-      router.push('/courses')
+      router.push('/')
     } catch (error: unknown) {
       handleError(error)
       return
@@ -223,7 +221,7 @@ const Register = () => {
         {/* Role field */}
         <RoleField role={formData.role} handleChange={handleChange} />
 
-        <PrimaryButton type='submit' disabled={loading}>
+        <PrimaryButton type='submit' disabled={loading || !isFormValid}>
           {loading ? <Loader /> : 'Register'}
         </PrimaryButton>
       </form>

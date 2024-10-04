@@ -4,14 +4,12 @@ import Loader from '@/components/Loader'
 import PrimaryButton from '@/components/PrimaryButton'
 import { handleError } from '@/lib/utils'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import React from 'react'
 import toast from 'react-hot-toast'
 
 const Login = () => {
   const [error, setError] = React.useState<string>('')
   const [loading, setLoading] = React.useState(false)
-  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -30,7 +28,7 @@ const Login = () => {
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false,
+        callbackUrl: '/',
       })
 
       if (result?.error) {
@@ -38,8 +36,6 @@ const Login = () => {
       }
 
       toast.success('Logged in successfully!')
-
-      router.push('/courses')
     } catch (error: unknown) {
       handleError(error)
       return

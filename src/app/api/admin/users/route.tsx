@@ -19,6 +19,7 @@ export async function GET() {
     .collection('users')
     .find({
       role: { $ne: 'admin' },
+      email: { $ne: session.user.email },
     })
     .sort({ role: -1 })
     .toArray()

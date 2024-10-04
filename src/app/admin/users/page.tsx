@@ -1,4 +1,3 @@
-import ErrorPage from '@/app/api/admin/users/error'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import React from 'react'
@@ -26,12 +25,13 @@ const Users = async () => {
   const data = await response.json()
 
   if (!response.ok) {
+    console.log('response', response)
     if (response.status === 401) {
       redirect('/auth/login?callbackUrl=/admin/users')
     } else if (response.status === 403) {
       redirect('/unauthorized')
     } else {
-      return <ErrorPage />
+      console.error(data)
     }
   }
 

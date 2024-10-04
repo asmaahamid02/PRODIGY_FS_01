@@ -5,7 +5,7 @@ import RoleField from '@/components/RoleField'
 import { handleError } from '@/lib/utils'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import React from 'react'
+import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
 
 const UpdateRole = () => {
@@ -44,10 +44,10 @@ const UpdateRole = () => {
     }
   }
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => update(), 1000 * 60 * 60)
-  //   return () => clearInterval(interval)
-  // }, [update])
+  useEffect(() => {
+    const interval = setInterval(() => update(), 1000 * 60 * 60)
+    return () => clearInterval(interval)
+  }, [update])
 
   // useEffect(() => {
   //   if (status !== 'authenticated') {

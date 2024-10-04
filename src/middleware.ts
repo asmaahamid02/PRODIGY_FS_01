@@ -5,6 +5,7 @@ export default withAuth(function middleware(req: NextRequestWithAuth) {
   // If the user is not authenticated, redirect to the login page
   const url = req.nextUrl.clone()
   const { pathname } = req.nextUrl
+  // console.log('middleware req', req)
 
   // Allow access to /update-role without redirection
   if (pathname === '/update-role') {
@@ -50,8 +51,6 @@ export const config = {
     '/admin/:path*',
     '/instructor/:path*',
     '/student/:path*',
-    '/courses/:path*',
-    '/users/:path*',
     '/unauthorized',
     '/update-role',
   ],
